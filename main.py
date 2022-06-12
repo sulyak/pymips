@@ -90,7 +90,7 @@ def make_i(ins, args, current_line, labels):
     # get opcode
     result = int2bin(opcode[ins], num_bits=6)
 
-    # args can be label, so get(rx, rx) is necessary
+    # args can be integers, so get(rx, rx) is necessary
     rs, rt, imm = args
     result += int2bin(reg.get(rt, rt), num_bits=5)
     result += int2bin(reg.get(rs, rs), num_bits=5)
