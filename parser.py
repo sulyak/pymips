@@ -1,6 +1,6 @@
 def parse_labels(lines):
     """
-    return a dict(label_name, label_line) from a list of asm src lines
+    return a dict(label_name, label_line)
     """
     labels = {}
     for count, line in enumerate(lines):
