@@ -3,8 +3,6 @@ import sys
 import struct
 import parser
 
-output_file = "a.bin"
-
 reg_names = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0",
              "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1",
              "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0",
@@ -15,17 +13,18 @@ for i, reg_name in enumerate(reg_names):
     reg[reg_name] = i
 
 
-def main():
-    with open("exemplo.asm", "r") as f:
+def main(input_file, output_file, is_text):
+    with open(input_file, "r") as f:
         lines = f.readlines()
 
     labels = parser.parse_labels(lines)
     lines = parser.remove_labels(lines)
 
-    with open(output_file, "wb") as f:
+    if is_text: file_mode = "w"
+    else: file_mode = "wb"
+    with open(output_file, file_mode) as f:
         for i, line in enumerate(lines):
             instruction, args = parser.parse_line(line)
-            print(instruction, args)
 
             if instruction_type(instruction) == "r":
                 result = make_r(instruction, args)
@@ -37,25 +36,19 @@ def main():
                 sys.stderr.write(f"instruction {instruction} not supported\n")
                 sys.exit(1)
 
-            if result:
+            if is_text:
+                f.write(result + "\n")
+            else:
                 f.write(struct.pack("<I", int(result, 2)))
-            print(result)
-            print()
-
-    print(labels)
 
 
 def make_r(ins, args):
-    # TODO remove this
-    # args = list(map(lambda x: x if x in reg.keys() else int(x), args))
-
     funct = {
             "add": 0x20,
             "and": 0x24,
             "jr": 0x8,
             "or": 0x25,
-            "sub": 0x22,
-            "sll": 0x0,
+            "sub": 0x22, "sll": 0x0,
             "srl": 0x2
             }
 
@@ -122,20 +115,13 @@ def make_j(ins, args, labels):
     # get opcode
     result = int2bin(opcode[ins], num_bits=6)
 
-    # check if argument is a label
+    # check if target argument is a label
     target, = args
     if target in labels:
         target = labels[target]
 
     result += int2bin(target, num_bits=26)
     return result
-
-
-def int2bin(value, num_bits):
-    """
-    returns a num_bits-binary number represented as a string (w/o 0b)
-    """
-    return bin(int(value))[2:].rjust(num_bits, "0")
 
 
 def instruction_type(instruction):
@@ -148,6 +134,13 @@ def instruction_type(instruction):
     return None
 
 
+def int2bin(value, num_bits):
+    """
+    returns a num_bits-binary number represented as a string (w/o 0b)
+    """
+    return bin(int(value))[2:].rjust(num_bits, "0")
+
+
 def twos_comp(val: int, num_bits):
     if val < 0:
         val += 2**num_bits
@@ -155,4 +148,14 @@ def twos_comp(val: int, num_bits):
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) < 2:
+        sys.stderr.write(f"usage: {sys.argv[0]} input_file [--text] -o output_file\n")
+        sys.exit(1)
+
+    is_text = "--text" in sys.argv
+    input_file = sys.argv[1]
+    if "-o" in sys.argv:
+        output_file = sys.argv[sys.argv.index("-o") + 1]
+    else:
+        output_file = "a.txt" if is_text else "a.bin"
+    main(input_file, output_file, is_text)
