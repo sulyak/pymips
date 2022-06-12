@@ -21,6 +21,7 @@ If `--text` is especified, output_file will cointain binary data represented as 
 
 First the program collects all labels an it's respective lines and removes all of them.
 Each lined is parsed in order to get the instruction and it's arguments, for example, `add $t1, $t2, $t3` would be parsed to `add, [$t1, $t2, $t3]`. After that, a binary equivalent of the instruction is created based on it's type and written to the output file.
+Each instruction is build according to the [MIPS32 Instruction Set Manual](https://www.mips.com/products/architectures/mips32-2/).
 
 
 
