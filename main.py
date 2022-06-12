@@ -136,6 +136,9 @@ def parse_labels(lines):
 
 
 def remove_labels(lines):
+    """
+    remove labels from each asm src line
+    """
     result = []
     for line in lines:
         if ":" in line:
@@ -146,10 +149,25 @@ def remove_labels(lines):
 
 
 def parse_line(line):
+    """
+    input: .asm src line
+    output: instruction, [args]
+    """
+    # take the instruction
     instruction = line.split(" ")[0].lower()
-    args = ''.join(line.split(" ")[1:])
+
+    # take everything but the instruction
+    args = "".join(line.split(" ")[1:])
+
+    # get individual arguments
     args = args.strip().split(",")
+
+    # lower everything
     args = list(map(str.lower, args))
+
+    # separate arguments from offset
+    # "-123($t)" -> "$t", "-123"
+    print(f"{args=}")
     for arg in reversed(args):
         if "(" in arg:
             offset, reg = arg.split("(")
