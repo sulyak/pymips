@@ -1,6 +1,7 @@
 #!/bin/python
 import sys
 import struct
+import parser
 
 output_file = "a.bin"
 
@@ -18,12 +19,12 @@ def main():
     with open("exemplo.asm", "r") as f:
         lines = f.readlines()
 
-    labels = parse_labels(lines)
-    lines = remove_labels(lines)
+    labels = parser.parse_labels(lines)
+    lines = parser.remove_labels(lines)
 
     with open(output_file, "wb") as f:
         for i, line in enumerate(lines):
-            instruction, args = parse_line(line)
+            instruction, args = parser.parse_line(line)
             print(instruction, args)
 
             if instruction_type(instruction) == "r":
@@ -124,58 +125,6 @@ def make_j(ins, args, labels):
         target = labels[target]
     result += bin(target)[2:].rjust(26, "0")
     return result
-
-
-def parse_labels(lines):
-    labels = {}
-    for count, line in enumerate(lines):
-        if ":" in line:
-            label_name = line.split(":")[0]
-            labels[label_name.lower()] = count
-    return labels
-
-
-def remove_labels(lines):
-    """
-    remove labels from each asm src line
-    """
-    result = []
-    for line in lines:
-        if ":" in line:
-            result += [line.split(":")[1].strip()]
-        else:
-            result += [line]
-    return result
-
-
-def parse_line(line):
-    """
-    input: .asm src line
-    output: instruction, [args]
-    """
-    # take the instruction
-    instruction = line.split(" ")[0].lower()
-
-    # take everything but the instruction
-    args = "".join(line.split(" ")[1:])
-
-    # get individual arguments
-    args = args.strip().split(",")
-
-    # lower everything
-    args = list(map(str.lower, args))
-
-    # separate arguments from offset
-    # "-123($t)" -> "$t", "-123"
-    print(f"{args=}")
-    for arg in reversed(args):
-        if "(" in arg:
-            offset, reg = arg.split("(")
-            reg = reg.replace(")", "")
-            args.remove(arg)
-            args += [reg, offset]
-
-    return instruction, args
 
 
 def instruction_type(instruction):
